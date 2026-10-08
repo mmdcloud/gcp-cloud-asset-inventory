@@ -1,16 +1,3 @@
-variable "project_id" { type = string }
-
-variable "saved_queries" {
-  description = "Saved IAM policy analysis queries. `query` is an iamPolicyAnalysisQuery object (camelCase, REST format)."
-  type = map(object({
-    description = optional(string, "")
-    query       = any
-  }))
-  default = {}
-}
-
-# No native Terraform resource exists for Cloud Asset saved queries, so this
-# drives the REST API. Requires gcloud + curl on the runner. Update = destroy+create.
 resource "terraform_data" "saved_query" {
   for_each         = var.saved_queries
   triggers_replace = sha256(jsonencode(each.value))

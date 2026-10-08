@@ -1,10 +1,3 @@
-variable "project_id" { type = string }
-variable "location" { type = string }
-variable "dataset_id" { type = string }
-variable "bucket_name" { type = string }
-variable "retention_days" { type = number }
-variable "labels" { type = map(string) }
-
 resource "google_bigquery_dataset" "inventory" {
   project                         = var.project_id
   dataset_id                      = var.dataset_id
@@ -15,8 +8,6 @@ resource "google_bigquery_dataset" "inventory" {
   labels                          = var.labels
 }
 
-# Long-term snapshot archive. Scheduler overwrites a fixed object path;
-# versioning keeps every prior snapshot as a noncurrent version.
 resource "google_storage_bucket" "archive" {
   project                     = var.project_id
   name                        = var.bucket_name
@@ -47,6 +38,3 @@ resource "google_storage_bucket" "archive" {
     action { type = "Delete" }
   }
 }
-
-output "dataset_id" { value = google_bigquery_dataset.inventory.dataset_id }
-output "bucket_name" { value = google_storage_bucket.archive.name }

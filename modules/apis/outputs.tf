@@ -1,0 +1,1 @@
+output "enabled" { value = keys(google_project_service.this) }

@@ -1,34 +1,3 @@
-terraform {
-  required_providers {
-    google      = { source = "hashicorp/google" }
-    google-beta = { source = "hashicorp/google-beta" }
-  }
-}
-
-variable "project_id" { type = string }
-variable "dataset_id" { type = string }
-variable "retention_days" { type = number }
-variable "labels" { type = map(string) }
-
-variable "feeds" {
-  type = map(object({
-    scope_type           = string # organization | folder | project
-    scope_id             = string
-    content_type         = optional(string, "RESOURCE")
-    asset_types          = optional(list(string), [".*"])
-    asset_names          = optional(list(string), [])
-    relationship_types   = optional(list(string), [])
-    condition_expression = optional(string)
-    condition_title      = optional(string, "feed filter")
-  }))
-  default = {}
-
-  validation {
-    condition     = alltrue([for f in values(var.feeds) : contains(["organization", "folder", "project"], f.scope_type)])
-    error_message = "scope_type must be organization, folder or project."
-  }
-}
-
 # Service agents must exist before IAM bindings can reference them.
 resource "google_project_service_identity" "cloudasset" {
   provider = google-beta
@@ -47,7 +16,6 @@ locals {
   pubsub_agent = "serviceAccount:${google_project_service_identity.pubsub.email}"
 }
 
-# ---- Pub/Sub plumbing ----
 resource "google_pubsub_topic" "feed" {
   project                    = var.project_id
   name                       = "cai-feed"
@@ -236,6 +204,3 @@ resource "google_cloud_asset_project_feed" "this" {
 
   depends_on = [google_pubsub_topic_iam_member.cai_publisher]
 }
-
-output "topic_id" { value = google_pubsub_topic.feed.id }
-output "dlq_subscription" { value = google_pubsub_subscription.dlq_pull.name }
